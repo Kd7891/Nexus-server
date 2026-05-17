@@ -357,7 +357,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
         <span class="ctrl-icon">✏️</span>
         <span class="ctrl-lbl">Board</span>
       </button>
-      <button class="ctrl-btn active" id="btn-chat" onclick="openPanel('chat')">
+      <button class="ctrl-btn" id="btn-chat" onclick="openPanel('chat')">
         <span class="ctrl-icon">💬</span>
         <span class="ctrl-lbl">Chat</span>
       </button>
@@ -512,7 +512,8 @@ async function startMeeting() {
   }
   showScreen('meeting');
   document.getElementById('hdr-room').textContent=currentRoom;
-  buildMyTile(); openPanel('chat'); buildWbToolbar(); setupCanvas(); startTimer(); initSocket();
+  buildMyTile(); buildWbToolbar(); setupCanvas(); startTimer(); initSocket();
+  // Videos fill full width on start — no panel open
 }
 
 function initSocket() {
@@ -556,26 +557,63 @@ function closePeer(sid) { const pc=peerConns.get(sid); if(pc){pc.close();peerCon
 // ── SCREEN SHARE ──────────────────────────────
 async function toggleScreenShare() {
   if (isScreenSharing) { stopScreenShare(); return; }
+
+  // Must be HTTPS or localhost
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    alert('Screen sharing requires HTTPS. Your app is already on HTTPS so this should work — try Chrome or Edge.');
+    return;
+  }
+
+  // Browser support check
+  if (!navigator.mediaDevices?.getDisplayMedia) {
+    alert('Your browser does not support screen sharing.\nPlease use Google Chrome, Microsoft Edge, or Firefox.');
+    return;
+  }
+
   try {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'},audio:false});
-    const track = screenStream.getVideoTracks()[0];
-    // Replace video track in all peer connections
-    peerConns.forEach(pc => {
-      const sender = pc.getSenders().find(s => s.track && s.track.kind==='video');
-      if (sender) sender.replaceTrack(track);
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: true,
+      audio: false
     });
-    // Show screen in my tile
-    const myVideo = document.querySelector('#tile-'+(mySocketId||'me')+' video');
-    if (myVideo) { myVideo.srcObject = screenStream; myVideo.style.objectFit='contain'; }
-    const badge = document.querySelector('#tile-'+(mySocketId||'me')+' .v-screen-badge');
+
+    const track = screenStream.getVideoTracks()[0];
+    if (!track) return;
+
+    // Replace video track in all active peer connections
+    for (const [, pc] of peerConns) {
+      const sender = pc.getSenders().find(s => s.track?.kind === 'video');
+      if (sender) {
+        try { await sender.replaceTrack(track); } catch(e) {}
+      }
+    }
+
+    // Show screen in my own tile
+    const myTileId = '#tile-' + (mySocketId || 'me');
+    const myVideo = document.querySelector(myTileId + ' video');
+    if (myVideo) {
+      myVideo.srcObject = screenStream;
+      myVideo.style.objectFit = 'contain';
+    }
+    const badge = document.querySelector(myTileId + ' .v-screen-badge');
     if (badge) badge.style.display = 'block';
-    // Auto-stop when user clicks Stop in browser UI
+
+    // When user clicks "Stop sharing" in the browser's own UI
     track.onended = () => stopScreenShare();
-    isScreenSharing=true;
-    document.getElementById('btn-share').className='ctrl-btn sharing';
-    document.getElementById('ico-share').textContent='⏹️';
-    document.getElementById('lbl-share').textContent='Stop';
-  } catch(e) { /* user cancelled */ }
+
+    isScreenSharing = true;
+    document.getElementById('btn-share').className = 'ctrl-btn sharing';
+    document.getElementById('ico-share').textContent = '⏹️';
+    document.getElementById('lbl-share').textContent = 'Stop';
+
+  } catch(e) {
+    if (e.name === 'NotAllowedError') {
+      // User dismissed the picker — do nothing
+    } else if (e.name === 'NotSupportedError') {
+      alert('Screen sharing is not supported on this device or browser.');
+    } else {
+      alert('Screen sharing failed: ' + e.message);
+    }
+  }
 }
 
 function stopScreenShare() {
