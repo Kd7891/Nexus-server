@@ -20,7 +20,7 @@ body{font-family:'DM Sans',sans-serif;background:#07070f;color:#e8e8f5;height:10
 button{cursor:pointer;border:none;font-family:'DM Sans',sans-serif}
 input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 
-/* ── SHARED AUTH SCREENS ── */
+/* ── AUTH SCREENS ── */
 .auth-screen{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:1.5rem;background:radial-gradient(ellipse at 50% 0%,#1a1040 0%,#07070f 65%)}
 .a-logo{display:flex;align-items:center;gap:10px;margin-bottom:1.75rem}
 .a-hex{width:36px;height:36px;background:#6366f1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}
@@ -36,7 +36,6 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .a-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
 .a-link{text-align:center;font-size:12px;color:#5a5a7a;margin-top:12px}
 .a-link b{color:#6366f1;cursor:pointer}
-.a-link b:hover{text-decoration:underline}
 .a-err{background:#1f1010;border:1px solid #3a1515;border-radius:8px;padding:9px 12px;font-size:12px;color:#ef4444;margin-bottom:8px;display:none}
 .a-divider{display:flex;align-items:center;gap:8px;margin:10px 0}
 .a-divider span{color:#3a3a5a;font-size:11px;white-space:nowrap}
@@ -63,7 +62,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .ac-title{font-size:14px;font-weight:500;margin-bottom:2px}
 .ac-sub{font-size:11px;opacity:.7}
 
-/* ── CREATE ROOM ── */
+/* ── CREATE ── */
 #screen-create{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:1.5rem;background:radial-gradient(ellipse at 50% 0%,#1a1040 0%,#07070f 65%)}
 .create-card{background:#0d0d1a;border:1px solid #1c1c2e;border-radius:14px;padding:1.5rem;width:100%;max-width:360px}
 .back-row{display:flex;align-items:center;gap:8px;margin-bottom:1rem;cursor:pointer;color:#5a5a7a;font-size:13px}
@@ -74,18 +73,17 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .share-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .share-btn{background:#1c1c2e;border-radius:8px;padding:9px;text-align:center;font-size:12px;color:#8888aa;cursor:pointer;border:none;transition:.15s;font-family:'DM Sans',sans-serif}
 .share-btn:hover{background:#252540;color:#e8e8f5}
-.copied{color:#22c55e !important}
 
-/* ── JOIN ROOM ── */
+/* ── JOIN ── */
 #screen-join{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:1.5rem;background:radial-gradient(ellipse at 50% 0%,#1a1040 0%,#07070f 65%)}
 .join-card{background:#0d0d1a;border:1px solid #1c1c2e;border-radius:14px;padding:1.5rem;width:100%;max-width:360px}
 .code-inp{width:100%;background:#12121f;border:2px solid #1c1c2e;border-radius:9px;padding:14px;font-size:22px;font-weight:700;letter-spacing:6px;color:#6366f1;text-align:center;font-family:'Syne',monospace;text-transform:uppercase;transition:.2s;display:block}
 .code-inp:focus{border-color:#6366f1;background:#161628}
 .code-inp::placeholder{color:#3a3a5a;letter-spacing:2px;font-size:14px;font-weight:400}
 
-/* ── MEETING ROOM ── */
+/* ── MEETING ── */
 #meeting{display:none;flex-direction:column;height:100vh}
-.m-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#0d0d1a;border-bottom:1px solid #1c1c2e;flex-shrink:0}
+.m-header{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#0d0d1a;border-bottom:1px solid #1c1c2e;flex-shrink:0;z-index:10}
 .m-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;letter-spacing:-.5px}
 .m-hl{display:flex;align-items:center;gap:10px}
 .m-room{background:#1c1c2e;border-radius:6px;padding:3px 10px;font-size:12px;color:#8888aa;letter-spacing:.5px;font-family:monospace}
@@ -96,27 +94,75 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .m-pcount{font-size:12px;color:#5a5a7a}
 .m-end{background:#ef4444;color:#fff;font-size:12px;font-weight:500;padding:6px 14px;border-radius:8px;transition:.15s}
 .m-end:hover{background:#dc2626}
-.m-main{display:flex;flex:1;overflow:hidden}
-.m-video-area{flex:1;padding:10px;display:flex;flex-direction:column;min-width:0}
-#v-grid{flex:1;display:grid;gap:8px;grid-template-columns:1fr 1fr;min-height:0}
-#v-grid.solo{grid-template-columns:1fr}
-.v-tile{border-radius:12px;overflow:hidden;position:relative;background:#0d0d1a;border:1px solid #1c1c2e}
+
+/* ── MAIN LAYOUT — videos always visible ── */
+.m-main{display:flex;flex:1;overflow:hidden;min-height:0}
+
+/* Video area shrinks when sidebar opens but NEVER disappears */
+.m-video-area{
+  flex:1;
+  padding:10px;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  min-height:0;
+  transition:flex .25s ease;
+}
+
+/* ── VIDEO GRID — equal 2x2 ── */
+#v-grid{
+  flex:1;
+  display:grid;
+  gap:8px;
+  min-height:0;
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:1fr 1fr;
+}
+/* Adapt grid columns/rows by count */
+#v-grid.n1{grid-template-columns:1fr;grid-template-rows:1fr}
+#v-grid.n2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+#v-grid.n3,#v-grid.n4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+#v-grid.n5,#v-grid.n6{grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr}
+
+/* ── VIDEO TILE ── */
+.v-tile{
+  border-radius:12px;
+  overflow:hidden;
+  position:relative;
+  background:#0d0d1a;
+  border:1px solid #1c1c2e;
+  min-height:0;
+}
 .v-tile video{width:100%;height:100%;object-fit:cover;display:block}
 .v-tile.cam-off video{display:none}
 .v-avatar{width:100%;height:100%;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px}
 .v-tile.cam-off .v-avatar{display:flex}
-.v-initials{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:20px;background:#6366f133;color:#6366f1;border:1.5px solid #6366f155}
+.v-initials{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:18px;background:#6366f133;color:#6366f1;border:1.5px solid #6366f155}
 .v-camoff-lbl{font-size:11px;color:#4a4a6a}
-.v-nametag{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:500;color:#cccce0;display:flex;align-items:center;gap:5px}
+.v-nametag{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:500;color:#cccce0;display:flex;align-items:center;gap:5px}
 .v-you{color:#6366f1;font-size:10px}
-.v-conn-state{position:absolute;top:8px;right:8px;font-size:10px;background:rgba(0,0,0,.6);border-radius:4px;padding:2px 6px;color:#f59e0b}
-.m-sidebar{width:0;overflow:hidden;transition:width .25s;border-left:1px solid #1c1c2e;display:flex;flex-direction:column;background:#0d0d1a;flex-shrink:0}
-.m-sidebar.open{width:285px}
+.v-conn-state{position:absolute;top:8px;right:8px;font-size:10px;background:rgba(0,0,0,.65);border-radius:4px;padding:2px 6px;color:#f59e0b;display:none}
+.v-screen-badge{position:absolute;top:8px;left:8px;background:#6366f1cc;border-radius:4px;padding:2px 6px;font-size:10px;color:#fff;display:none}
+
+/* ── SIDEBAR — slides in, videos shrink ── */
+.m-sidebar{
+  width:0;
+  overflow:hidden;
+  transition:width .25s ease;
+  border-left:1px solid #1c1c2e;
+  display:flex;
+  flex-direction:column;
+  background:#0d0d1a;
+  flex-shrink:0;
+}
+.m-sidebar.open{width:280px}
 .s-tabs{display:flex;align-items:center;border-bottom:1px solid #1c1c2e;padding:0 12px;flex-shrink:0}
 .s-tab{flex:1;padding:12px 0;font-size:13px;font-weight:500;color:#5a5a7a;background:transparent;border-bottom:2px solid transparent;transition:.15s;margin-bottom:-1px}
 .s-tab.active{color:#e8e8f5;border-bottom-color:#6366f1}
 .s-close{margin-left:auto;background:transparent;color:#3a3a5a;font-size:16px;padding:4px 6px;border-radius:4px;transition:.15s}
 .s-close:hover{color:#8888aa}
+
+/* ── CHAT ── */
 .chat-panel{display:flex;flex-direction:column;flex:1;overflow:hidden}
 .chat-msgs{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px}
 .chat-msg{display:flex;gap:8px}
@@ -131,6 +177,9 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .chat-inp:focus{border-color:#6366f1}
 .chat-inp::placeholder{color:#3a3a5a}
 .chat-send{background:#6366f1;color:#fff;width:32px;height:32px;border-radius:8px;font-size:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.chat-send:hover{background:#5558e8}
+
+/* ── WHITEBOARD ── */
 .wb-panel{display:flex;flex-direction:column;flex:1;overflow:hidden}
 .wb-toolbar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid #1c1c2e;flex-wrap:wrap;flex-shrink:0}
 .wb-btn{background:#1c1c2e;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#8888aa;transition:.15s}
@@ -141,15 +190,18 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 .wb-clear{margin-left:auto;background:transparent;color:#5a5a7a;font-size:11px;padding:4px 8px;border-radius:5px}
 .wb-clear:hover{background:#1c1c2e;color:#e8e8f5}
 #wb-canvas{cursor:crosshair;width:100%;height:100%;display:block;background:#07070f}
+
+/* ── CONTROLS ── */
 .m-controls{background:#0d0d1a;border-top:1px solid #1c1c2e;padding:10px 16px;display:flex;justify-content:center;flex-shrink:0}
-.ctrl-row{display:flex;gap:6px;align-items:center}
-.ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:#12121f;border:1px solid #1c1c2e;border-radius:10px;padding:8px 12px;min-width:52px;transition:.15s;color:#8888aa}
+.ctrl-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:center}
+.ctrl-btn{display:flex;flex-direction:column;align-items:center;gap:3px;background:#12121f;border:1px solid #1c1c2e;border-radius:10px;padding:8px 10px;min-width:48px;transition:.15s;color:#8888aa}
 .ctrl-btn:hover{background:#1a1a2e;color:#e8e8f5}
 .ctrl-btn.active{background:#1e1e40;border-color:#6366f1;color:#6366f1}
 .ctrl-btn.off{background:#1f1010;border-color:#3a1515;color:#ef4444}
+.ctrl-btn.sharing{background:#1e3020;border-color:#22c55e;color:#22c55e}
 .ctrl-icon{font-size:18px;line-height:1}
 .ctrl-lbl{font-size:9px;font-weight:500;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
-.ctrl-sep{width:1px;height:32px;background:#1c1c2e;margin:0 4px}
+.ctrl-sep{width:1px;height:32px;background:#1c1c2e;margin:0 3px}
 .ctrl-end{background:#ef4444!important;border-color:#ef4444!important;color:#fff!important}
 .ctrl-end:hover{background:#dc2626!important}
 </style>
@@ -164,7 +216,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
   <div class="a-card">
     <div class="a-err" id="login-err"></div>
     <input class="a-inp" id="login-email" type="email" placeholder="Email address" autocomplete="email">
-    <input class="a-inp" id="login-pass"  type="password" placeholder="Password" autocomplete="current-password">
+    <input class="a-inp" id="login-pass" type="password" placeholder="Password" autocomplete="current-password">
     <button class="a-btn" id="login-btn" onclick="doLogin()">Sign in →</button>
     <div class="a-divider"><div></div><span>don't have an account?</span><div></div></div>
     <div class="a-link"><b onclick="showScreen('register')">Create a free account</b></div>
@@ -183,9 +235,9 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
   <p class="a-sub">Free forever · no credit card needed</p>
   <div class="a-card">
     <div class="a-err" id="reg-err"></div>
-    <input class="a-inp" id="reg-name"  type="text"     placeholder="Your display name" autocomplete="name">
-    <input class="a-inp" id="reg-email" type="email"    placeholder="Email address" autocomplete="email">
-    <input class="a-inp" id="reg-pass"  type="password" placeholder="Password (min 8 characters)" autocomplete="new-password">
+    <input class="a-inp" id="reg-name" type="text" placeholder="Your display name" autocomplete="name">
+    <input class="a-inp" id="reg-email" type="email" placeholder="Email address" autocomplete="email">
+    <input class="a-inp" id="reg-pass" type="password" placeholder="Password (min 8 characters)" autocomplete="new-password">
     <button class="a-btn" id="reg-btn" onclick="doRegister()">Create account →</button>
     <div class="a-link">Already have an account? <b onclick="showScreen('login')">Sign in</b></div>
   </div>
@@ -215,7 +267,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
   </div>
 </div>
 
-<!-- ═══ CREATE ROOM ═══ -->
+<!-- ═══ CREATE ═══ -->
 <div id="screen-create">
   <div class="create-card">
     <div class="back-row" onclick="showScreen('dashboard')">← Back</div>
@@ -223,7 +275,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
     <p style="font-size:12px;color:#5a5a7a">Share this code with anyone you want to invite</p>
     <div class="code-display">
       <div class="code-val" id="create-code">------</div>
-      <div class="code-hint">Room code · share this with participants</div>
+      <div class="code-hint">Room code · share with participants</div>
     </div>
     <div class="share-row">
       <button class="share-btn" id="copy-code-btn" onclick="copyCode()">📋 Copy code</button>
@@ -233,7 +285,7 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
   </div>
 </div>
 
-<!-- ═══ JOIN ROOM ═══ -->
+<!-- ═══ JOIN ═══ -->
 <div id="screen-join">
   <div class="join-card">
     <div class="back-row" onclick="showScreen('dashboard')">← Back</div>
@@ -259,9 +311,11 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
       <button class="m-end" onclick="leaveMeeting()">End call</button>
     </div>
   </div>
+
+  <!-- Videos always visible + sidebar slides in beside them -->
   <div class="m-main">
     <div class="m-video-area">
-      <div id="v-grid" class="solo"></div>
+      <div id="v-grid" class="n1"></div>
     </div>
     <div class="m-sidebar" id="sidebar">
       <div class="s-tabs">
@@ -282,6 +336,8 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
       </div>
     </div>
   </div>
+
+  <!-- Controls -->
   <div class="m-controls">
     <div class="ctrl-row">
       <button class="ctrl-btn active" id="btn-mic" onclick="toggleMic()">
@@ -292,16 +348,23 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
         <span class="ctrl-icon" id="ico-cam">📷</span>
         <span class="ctrl-lbl" id="lbl-cam">Camera</span>
       </button>
+      <button class="ctrl-btn" id="btn-share" onclick="toggleScreenShare()">
+        <span class="ctrl-icon" id="ico-share">🖥️</span>
+        <span class="ctrl-lbl" id="lbl-share">Share</span>
+      </button>
       <div class="ctrl-sep"></div>
       <button class="ctrl-btn" id="btn-wb" onclick="openPanel('whiteboard')">
-        <span class="ctrl-icon">✏️</span><span class="ctrl-lbl">Board</span>
+        <span class="ctrl-icon">✏️</span>
+        <span class="ctrl-lbl">Board</span>
       </button>
       <button class="ctrl-btn active" id="btn-chat" onclick="openPanel('chat')">
-        <span class="ctrl-icon">💬</span><span class="ctrl-lbl">Chat</span>
+        <span class="ctrl-icon">💬</span>
+        <span class="ctrl-lbl">Chat</span>
       </button>
       <div class="ctrl-sep"></div>
       <button class="ctrl-btn ctrl-end" onclick="leaveMeeting()">
-        <span class="ctrl-icon">📵</span><span class="ctrl-lbl">Leave</span>
+        <span class="ctrl-icon">📵</span>
+        <span class="ctrl-lbl">Leave</span>
       </button>
     </div>
   </div>
@@ -310,82 +373,63 @@ input{font-family:'DM Sans',sans-serif;outline:none;border:none}
 <script>
 // ── CONFIG ────────────────────────────────────
 const SERVER = 'https://nexus-server-1lyf.onrender.com';
-const ICE = { iceServers: [
-  { urls: 'stun:stun.l.google.com:19302' },
-  { urls: 'stun:stun1.l.google.com:19302' }
-]};
+const ICE = { iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}]};
 const COLORS = ['#6366f1','#f43f5e','#22c55e','#f59e0b','#e879f9','#ffffff'];
 
 // ── AUTH STATE ────────────────────────────────
-let authToken    = localStorage.getItem('nexus_token') || null;
-let currentUser  = null;
+let authToken   = localStorage.getItem('nexus_token') || null;
+let currentUser = null;
 let generatedCode = null;
 
 // ── SCREEN ROUTER ─────────────────────────────
 function showScreen(name) {
-  document.querySelectorAll('.auth-screen, #screen-dashboard, #screen-create, #screen-join, #meeting').forEach(el => {
-    el.style.display = 'none';
+  ['screen-login','screen-register','screen-dashboard','screen-create','screen-join','meeting'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
   });
-  const target = document.getElementById('screen-' + name) || document.getElementById(name);
-  if (target) target.style.display = (name === 'meeting') ? 'flex' : (name === 'dashboard' || name === 'create' || name === 'join') ? 'flex' : 'flex';
+  const el = document.getElementById('screen-' + name) || document.getElementById(name);
+  if (el) el.style.display = 'flex';
 }
 
-// ── BOOT — check saved session ─────────────────
+// ── BOOT ──────────────────────────────────────
 window.onload = async function() {
   if (authToken) {
     try {
-      const res  = await fetch(SERVER + '/api/me', { headers: { Authorization: 'Bearer ' + authToken }});
+      const res  = await fetch(SERVER + '/api/me', { headers:{ Authorization:'Bearer '+authToken }});
       const data = await res.json();
-      if (data.user) {
-        currentUser = data.user;
-        loadDashboard();
-        showScreen('dashboard');
-        return;
-      }
+      if (data.user) { currentUser = data.user; loadDashboard(); showScreen('dashboard'); return; }
     } catch(e) {}
-    // Token invalid — clear it
-    localStorage.removeItem('nexus_token');
-    authToken = null;
+    localStorage.removeItem('nexus_token'); authToken = null;
   }
   showScreen('login');
+  // Check for ?join= in URL
+  const params = new URLSearchParams(window.location.search);
+  const joinCode = params.get('join');
+  if (joinCode) document.getElementById('join-code').value = joinCode.toUpperCase();
 };
 
 // ── LOGIN ─────────────────────────────────────
-document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('login-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+  document.getElementById('reg-pass').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
+});
 
 async function doLogin() {
   const email = document.getElementById('login-email').value.trim();
   const pass  = document.getElementById('login-pass').value;
   const err   = document.getElementById('login-err');
   const btn   = document.getElementById('login-btn');
-
-  err.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Signing in…';
-
+  err.style.display='none'; btn.disabled=true; btn.textContent='Signing in…';
   try {
-    const res  = await fetch(SERVER + '/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
-    });
+    const res  = await fetch(SERVER+'/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Login failed');
-
-    authToken   = data.token;
-    currentUser = data.user;
-    localStorage.setItem('nexus_token', authToken);
-    loadDashboard();
-    showScreen('dashboard');
-  } catch(e) {
-    err.textContent = e.message;
-    err.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Sign in →';
-  }
+    if (!res.ok) throw new Error(data.error||'Login failed');
+    authToken=data.token; currentUser=data.user;
+    localStorage.setItem('nexus_token',authToken);
+    loadDashboard(); showScreen('dashboard');
+  } catch(e) { err.textContent=e.message; err.style.display='block'; }
+  finally { btn.disabled=false; btn.textContent='Sign in →'; }
 }
-
-// ── REGISTER ──────────────────────────────────
-document.getElementById('reg-pass').addEventListener('keydown', e => { if(e.key==='Enter') doRegister(); });
 
 async function doRegister() {
   const name  = document.getElementById('reg-name').value.trim();
@@ -393,247 +437,206 @@ async function doRegister() {
   const pass  = document.getElementById('reg-pass').value;
   const err   = document.getElementById('reg-err');
   const btn   = document.getElementById('reg-btn');
-
-  err.style.display = 'none';
-  btn.disabled = true; btn.textContent = 'Creating account…';
-
+  err.style.display='none'; btn.disabled=true; btn.textContent='Creating account…';
   try {
-    const res  = await fetch(SERVER + '/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass, displayName: name })
-    });
+    const res  = await fetch(SERVER+'/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass,displayName:name})});
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Registration failed');
-
-    authToken   = data.token;
-    currentUser = data.user;
-    localStorage.setItem('nexus_token', authToken);
-    loadDashboard();
-    showScreen('dashboard');
-  } catch(e) {
-    err.textContent = e.message;
-    err.style.display = 'block';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Create account →';
-  }
+    if (!res.ok) throw new Error(data.error||'Registration failed');
+    authToken=data.token; currentUser=data.user;
+    localStorage.setItem('nexus_token',authToken);
+    loadDashboard(); showScreen('dashboard');
+  } catch(e) { err.textContent=e.message; err.style.display='block'; }
+  finally { btn.disabled=false; btn.textContent='Create account →'; }
 }
 
-// ── LOGOUT ────────────────────────────────────
 function doLogout() {
-  localStorage.removeItem('nexus_token');
-  authToken = null; currentUser = null;
-  showScreen('login');
+  localStorage.removeItem('nexus_token'); authToken=null; currentUser=null; showScreen('login');
 }
 
-// ── DASHBOARD ─────────────────────────────────
 function loadDashboard() {
   if (!currentUser) return;
   const ini = currentUser.displayName.trim().split(' ').map(w=>w[0]).join('').substr(0,2).toUpperCase();
   document.getElementById('dash-av').textContent    = ini;
   document.getElementById('dash-name').textContent  = currentUser.displayName;
   document.getElementById('dash-email').textContent = currentUser.email;
-  document.getElementById('join-name-hint').textContent = 'You will appear as "' + currentUser.displayName + '"';
+  document.getElementById('join-name-hint').textContent = 'You will appear as "'+currentUser.displayName+'"';
 }
 
-// ── CREATE MEETING ────────────────────────────
+// ── CREATE / JOIN ─────────────────────────────
 function doCreate() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i=0; i<6; i++) code += chars[Math.floor(Math.random()*chars.length)];
-  generatedCode = code;
-  document.getElementById('create-code').textContent = code;
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code='';
+  for(let i=0;i<6;i++) code+=chars[Math.floor(Math.random()*chars.length)];
+  generatedCode=code;
+  document.getElementById('create-code').textContent=code;
   showScreen('create');
 }
 
 function copyCode() {
-  navigator.clipboard.writeText(generatedCode).then(() => {
-    const btn = document.getElementById('copy-code-btn');
-    btn.textContent = '✅ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '📋 Copy code'; btn.classList.remove('copied'); }, 2000);
+  navigator.clipboard.writeText(generatedCode).then(()=>{
+    const b=document.getElementById('copy-code-btn');
+    b.textContent='✅ Copied!'; setTimeout(()=>b.textContent='📋 Copy code',2000);
   });
 }
-
 function copyLink() {
-  const link = window.location.origin + '?join=' + generatedCode;
-  navigator.clipboard.writeText(link).then(() => {
-    const btn = document.getElementById('copy-link-btn');
-    btn.textContent = '✅ Copied!'; btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = '🔗 Copy link'; btn.classList.remove('copied'); }, 2000);
+  navigator.clipboard.writeText(window.location.origin+'?join='+generatedCode).then(()=>{
+    const b=document.getElementById('copy-link-btn');
+    b.textContent='✅ Copied!'; setTimeout(()=>b.textContent='🔗 Copy link',2000);
   });
 }
-
-async function startMeetingAsHost() {
-  currentRoom = generatedCode;
-  myName      = currentUser.displayName;
-  await startMeeting();
-}
-
-// ── JOIN MEETING ──────────────────────────────
+async function startMeetingAsHost() { currentRoom=generatedCode; myName=currentUser.displayName; await startMeeting(); }
 async function doJoin() {
-  const code = document.getElementById('join-code').value.trim().toUpperCase();
-  const err  = document.getElementById('join-err');
-  err.style.display = 'none';
-  if (code.length < 4) {
-    err.textContent = 'Please enter a valid room code.';
-    err.style.display = 'block'; return;
-  }
-  currentRoom = code;
-  myName      = currentUser.displayName;
-  await startMeeting();
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  const err=document.getElementById('join-err'); err.style.display='none';
+  if(code.length<4){err.textContent='Please enter a valid room code.';err.style.display='block';return;}
+  currentRoom=code; myName=currentUser.displayName; await startMeeting();
 }
 
-// Check URL for ?join= parameter (from shared link)
-window.addEventListener('load', () => {
-  const params = new URLSearchParams(window.location.search);
-  const joinCode = params.get('join');
-  if (joinCode && authToken) {
-    document.getElementById('join-code').value = joinCode.toUpperCase();
-  }
-});
-
-// ── MEETING ENGINE ────────────────────────────
-let socket, localStream;
+// ── MEETING STATE ─────────────────────────────
+let socket, localStream, screenStream;
 let peerConns    = new Map();
 let remoteStreams = new Map();
 let participants  = new Map();
-let mySocketId   = null;
-let myName       = '';
-let currentRoom  = '';
-let micOn = true, camOn = true;
-let timerInterval = null, elapsed = 0;
-let isDrawing = false, lastX = 0, lastY = 0;
-let wbTool = 'pen', wbColor = '#6366f1', wbSize = 3;
-let snapshot = null, startX = 0, startY = 0;
+let mySocketId=null, myName='', currentRoom='';
+let micOn=true, camOn=true, isScreenSharing=false;
+let timerInterval=null, elapsed=0;
+let isDrawing=false, lastX=0, lastY=0, wbTool='pen', wbColor='#6366f1', wbSize=3, snapshot=null, startX=0, startY=0;
 
 async function startMeeting() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
   } catch(e) {
-    try { localStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch(e2) {
-      alert('Could not access camera or microphone. Please allow permission and try again.');
-      return;
+    try { localStream = await navigator.mediaDevices.getUserMedia({audio:true}); } catch(e2) {
+      alert('Could not access camera or microphone. Please allow permission and try again.'); return;
     }
   }
   showScreen('meeting');
-  document.getElementById('hdr-room').textContent = currentRoom;
-  buildMyTile();
-  openPanel('chat');
-  buildWbToolbar();
-  setupCanvas();
-  startTimer();
-  initSocket();
+  document.getElementById('hdr-room').textContent=currentRoom;
+  buildMyTile(); openPanel('chat'); buildWbToolbar(); setupCanvas(); startTimer(); initSocket();
 }
 
 function initSocket() {
-  socket = io(SERVER, { transports: ['websocket','polling'] });
-  socket.on('connect', () => {
-    mySocketId = socket.id;
-    socket.emit('join-room', { roomCode: currentRoom, name: myName });
-  });
-  socket.on('room-joined', async ({ participants: existing }) => {
-    for (const p of existing) {
-      participants.set(p.socketId, p);
-      addRemoteTile(p.socketId, p.name);
-      await createOffer(p.socketId);
-    }
+  socket=io(SERVER,{transports:['websocket','polling']});
+  socket.on('connect',()=>{ mySocketId=socket.id; socket.emit('join-room',{roomCode:currentRoom,name:myName}); });
+  socket.on('room-joined',async({participants:existing})=>{
+    for(const p of existing){participants.set(p.socketId,p);addRemoteTile(p.socketId,p.name);await createOffer(p.socketId);}
     updateCount();
   });
-  socket.on('participant-joined', ({ socketId, name }) => {
-    participants.set(socketId, { socketId, name });
-    addRemoteTile(socketId, name);
-    updateCount();
-  });
-  socket.on('participant-left', ({ socketId }) => {
-    participants.delete(socketId); closePeer(socketId); removeTile(socketId); updateCount();
-  });
-  socket.on('offer', async ({ fromSocketId, fromName, offer }) => {
-    if (!participants.has(fromSocketId)) { participants.set(fromSocketId, { socketId: fromSocketId, name: fromName }); addRemoteTile(fromSocketId, fromName); updateCount(); }
-    const pc = getOrCreatePC(fromSocketId);
+  socket.on('participant-joined',({socketId,name})=>{ participants.set(socketId,{socketId,name});addRemoteTile(socketId,name);updateCount(); });
+  socket.on('participant-left',({socketId})=>{ participants.delete(socketId);closePeer(socketId);removeTile(socketId);updateCount(); });
+  socket.on('offer',async({fromSocketId,fromName,offer})=>{
+    if(!participants.has(fromSocketId)){participants.set(fromSocketId,{socketId:fromSocketId,name:fromName});addRemoteTile(fromSocketId,fromName);updateCount();}
+    const pc=getOrCreatePC(fromSocketId);
     await pc.setRemoteDescription(new RTCSessionDescription(offer));
-    const answer = await pc.createAnswer();
+    const answer=await pc.createAnswer();
     await pc.setLocalDescription(answer);
-    socket.emit('answer', { targetSocketId: fromSocketId, answer });
+    socket.emit('answer',{targetSocketId:fromSocketId,answer});
   });
-  socket.on('answer', async ({ fromSocketId, answer }) => {
-    const pc = peerConns.get(fromSocketId);
-    if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
-  });
-  socket.on('ice-candidate', async ({ fromSocketId, candidate }) => {
-    const pc = peerConns.get(fromSocketId);
-    if (pc && candidate) try { await pc.addIceCandidate(new RTCIceCandidate(candidate)); } catch(e) {}
-  });
-  socket.on('chat-message', ({ fromSocketId, name, message, time }) => {
-    appendChatMsg({ name, message, time, isMe: fromSocketId === mySocketId });
-  });
-  socket.on('draw-event', drawRemote);
-  socket.on('clear-board', clearCanvasLocal);
+  socket.on('answer',async({fromSocketId,answer})=>{ const pc=peerConns.get(fromSocketId); if(pc) await pc.setRemoteDescription(new RTCSessionDescription(answer)); });
+  socket.on('ice-candidate',async({fromSocketId,candidate})=>{ const pc=peerConns.get(fromSocketId); if(pc&&candidate) try{await pc.addIceCandidate(new RTCIceCandidate(candidate));}catch(e){} });
+  socket.on('chat-message',({fromSocketId,name,message,time})=>{ appendChatMsg({name,message,time,isMe:fromSocketId===mySocketId}); });
+  socket.on('draw-event',drawRemote);
+  socket.on('clear-board',clearCanvasLocal);
 }
 
-function getOrCreatePC(socketId) {
-  if (peerConns.has(socketId)) return peerConns.get(socketId);
-  const pc = new RTCPeerConnection(ICE);
-  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  const rs = new MediaStream(); remoteStreams.set(socketId, rs);
-  pc.ontrack = e => {
-    e.streams[0].getTracks().forEach(t => rs.addTrack(t));
-    const v = document.querySelector('#tile-'+socketId+' video');
-    if (v) v.srcObject = rs; setTileConnected(socketId);
-  };
-  pc.onicecandidate = e => { if (e.candidate) socket.emit('ice-candidate', { targetSocketId: socketId, candidate: e.candidate }); };
-  pc.onconnectionstatechange = () => {
-    if (pc.connectionState==='failed'||pc.connectionState==='disconnected') closePeer(socketId);
-  };
-  peerConns.set(socketId, pc); return pc;
+// ── WebRTC ────────────────────────────────────
+function getOrCreatePC(sid) {
+  if(peerConns.has(sid)) return peerConns.get(sid);
+  const pc=new RTCPeerConnection(ICE);
+  if(localStream) localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
+  const rs=new MediaStream(); remoteStreams.set(sid,rs);
+  pc.ontrack=e=>{ e.streams[0].getTracks().forEach(t=>rs.addTrack(t)); const v=document.querySelector('#tile-'+sid+' video'); if(v) v.srcObject=rs; setTileConnected(sid); };
+  pc.onicecandidate=e=>{ if(e.candidate) socket.emit('ice-candidate',{targetSocketId:sid,candidate:e.candidate}); };
+  pc.onconnectionstatechange=()=>{ if(pc.connectionState==='failed'||pc.connectionState==='disconnected') closePeer(sid); };
+  peerConns.set(sid,pc); return pc;
+}
+async function createOffer(sid) { const pc=getOrCreatePC(sid); const offer=await pc.createOffer(); await pc.setLocalDescription(offer); socket.emit('offer',{targetSocketId:sid,offer}); }
+function closePeer(sid) { const pc=peerConns.get(sid); if(pc){pc.close();peerConns.delete(sid);} remoteStreams.delete(sid); }
+
+// ── SCREEN SHARE ──────────────────────────────
+async function toggleScreenShare() {
+  if (isScreenSharing) { stopScreenShare(); return; }
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({video:{cursor:'always'},audio:false});
+    const track = screenStream.getVideoTracks()[0];
+    // Replace video track in all peer connections
+    peerConns.forEach(pc => {
+      const sender = pc.getSenders().find(s => s.track && s.track.kind==='video');
+      if (sender) sender.replaceTrack(track);
+    });
+    // Show screen in my tile
+    const myVideo = document.querySelector('#tile-'+(mySocketId||'me')+' video');
+    if (myVideo) { myVideo.srcObject = screenStream; myVideo.style.objectFit='contain'; }
+    const badge = document.querySelector('#tile-'+(mySocketId||'me')+' .v-screen-badge');
+    if (badge) badge.style.display = 'block';
+    // Auto-stop when user clicks Stop in browser UI
+    track.onended = () => stopScreenShare();
+    isScreenSharing=true;
+    document.getElementById('btn-share').className='ctrl-btn sharing';
+    document.getElementById('ico-share').textContent='⏹️';
+    document.getElementById('lbl-share').textContent='Stop';
+  } catch(e) { /* user cancelled */ }
 }
 
-async function createOffer(sid) {
-  const pc = getOrCreatePC(sid);
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  socket.emit('offer', { targetSocketId: sid, offer });
+function stopScreenShare() {
+  if(!isScreenSharing) return;
+  if(screenStream) { screenStream.getTracks().forEach(t=>t.stop()); screenStream=null; }
+  // Restore camera track
+  if(localStream) {
+    const camTrack = localStream.getVideoTracks()[0];
+    if(camTrack) peerConns.forEach(pc=>{ const s=pc.getSenders().find(s=>s.track&&s.track.kind==='video'); if(s) s.replaceTrack(camTrack); });
+    const myVideo = document.querySelector('#tile-'+(mySocketId||'me')+' video');
+    if(myVideo) { myVideo.srcObject=localStream; myVideo.style.objectFit='cover'; }
+  }
+  const badge = document.querySelector('#tile-'+(mySocketId||'me')+' .v-screen-badge');
+  if(badge) badge.style.display='none';
+  isScreenSharing=false;
+  document.getElementById('btn-share').className='ctrl-btn';
+  document.getElementById('ico-share').textContent='🖥️';
+  document.getElementById('lbl-share').textContent='Share';
 }
 
-function closePeer(sid) {
-  const pc = peerConns.get(sid);
-  if (pc) { pc.close(); peerConns.delete(sid); } remoteStreams.delete(sid);
-}
-
+// ── VIDEO TILES ───────────────────────────────
 function buildMyTile() {
-  const grid = document.getElementById('v-grid'); grid.innerHTML = '';
-  const tile = makeTile(mySocketId||'me', myName, true);
-  const v = tile.querySelector('video');
-  if (localStream && v) v.srcObject = localStream;
+  const grid=document.getElementById('v-grid'); grid.innerHTML='';
+  const tile=makeTile(mySocketId||'me',myName,true);
+  const v=tile.querySelector('video'); if(localStream&&v) v.srcObject=localStream;
   grid.appendChild(tile); updateGridLayout();
 }
 
-function makeTile(sid, name, isLocal) {
-  const tile = document.createElement('div'); tile.className='v-tile'; tile.id='tile-'+sid;
-  const v = document.createElement('video'); v.autoplay=true; v.playsInline=true; if(isLocal) v.muted=true;
-  const av = document.createElement('div'); av.className='v-avatar';
+function makeTile(sid,name,isLocal) {
+  const tile=document.createElement('div'); tile.className='v-tile'; tile.id='tile-'+sid;
+  const v=document.createElement('video'); v.autoplay=true; v.playsInline=true; if(isLocal) v.muted=true;
+  const av=document.createElement('div'); av.className='v-avatar';
   av.innerHTML='<div class="v-initials">'+initials(name)+'</div><span class="v-camoff-lbl">'+(isLocal?'Camera off':'Connecting…')+'</span>';
-  const tag = document.createElement('div'); tag.className='v-nametag';
-  tag.innerHTML=name+(isLocal?'<span class="v-you"> (you)</span>':'');
-  tile.appendChild(v); tile.appendChild(av); tile.appendChild(tag); return tile;
+  const tag=document.createElement('div'); tag.className='v-nametag';
+  tag.innerHTML=escapeHtml(name)+(isLocal?'<span class="v-you"> (you)</span>':'');
+  const screen=document.createElement('div'); screen.className='v-screen-badge'; screen.textContent='📺 Screen';
+  tile.appendChild(v); tile.appendChild(av); tile.appendChild(tag); tile.appendChild(screen); return tile;
 }
 
-function addRemoteTile(sid, name) {
-  if (document.getElementById('tile-'+sid)) return;
-  const tile = makeTile(sid, name, false);
-  const badge = document.createElement('div'); badge.className='v-conn-state'; badge.textContent='Connecting…';
+function addRemoteTile(sid,name) {
+  if(document.getElementById('tile-'+sid)) return;
+  const tile=makeTile(sid,name,false);
+  const badge=document.createElement('div'); badge.className='v-conn-state'; badge.textContent='Connecting…'; badge.style.display='block';
   tile.appendChild(badge);
   document.getElementById('v-grid').appendChild(tile); updateGridLayout();
 }
 
 function setTileConnected(sid) {
-  const b = document.querySelector('#tile-'+sid+' .v-conn-state'); if(b) b.style.display='none';
-  const l = document.querySelector('#tile-'+sid+' .v-camoff-lbl'); if(l) l.textContent='Camera off';
+  const b=document.querySelector('#tile-'+sid+' .v-conn-state'); if(b) b.style.display='none';
+  const l=document.querySelector('#tile-'+sid+' .v-camoff-lbl'); if(l) l.textContent='Camera off';
 }
-
 function removeTile(sid) { const t=document.getElementById('tile-'+sid); if(t) t.remove(); updateGridLayout(); }
-function updateGridLayout() { const g=document.getElementById('v-grid'); const n=g.children.length; g.className=n<=1?'solo':''; }
+
+function updateGridLayout() {
+  const grid=document.getElementById('v-grid');
+  const n=grid.children.length;
+  grid.className = n<=1?'n1':n===2?'n2':n<=4?'n4':n<=6?'n6':'n4';
+}
 function updateCount() { const n=1+participants.size; document.getElementById('hdr-count').textContent=n+(n===1?' participant':' participants'); }
 
+// ── MIC / CAM ─────────────────────────────────
 function toggleMic() {
   micOn=!micOn; if(localStream) localStream.getAudioTracks().forEach(t=>t.enabled=micOn);
   document.getElementById('btn-mic').className='ctrl-btn '+(micOn?'active':'off');
@@ -648,7 +651,9 @@ function toggleCam() {
   const t=document.getElementById('tile-'+(mySocketId||'me')); if(t) t.classList.toggle('cam-off',!camOn);
 }
 
+// ── LEAVE ─────────────────────────────────────
 function leaveMeeting() {
+  stopScreenShare();
   if(socket){socket.emit('leave-room');socket.disconnect();}
   if(localStream) localStream.getTracks().forEach(t=>t.stop());
   peerConns.forEach(pc=>pc.close()); peerConns.clear(); remoteStreams.clear(); participants.clear();
@@ -657,23 +662,22 @@ function leaveMeeting() {
   showScreen('dashboard');
 }
 
+// ── TIMER ─────────────────────────────────────
 function startTimer() {
   clearInterval(timerInterval); elapsed=0;
   timerInterval=setInterval(()=>{elapsed++;const m=String(Math.floor(elapsed/60)).padStart(2,'0');const s=String(elapsed%60).padStart(2,'0');document.getElementById('hdr-timer').textContent=m+':'+s;},1000);
 }
 
-function sendChat() {
-  const inp=document.getElementById('chat-inp'); const msg=inp.value.trim();
-  if(!msg||!socket) return; socket.emit('chat-message',{message:msg}); inp.value='';
-}
-
+// ── CHAT ──────────────────────────────────────
+function sendChat() { const inp=document.getElementById('chat-inp'); const msg=inp.value.trim(); if(!msg||!socket)return; socket.emit('chat-message',{message:msg}); inp.value=''; }
 function appendChatMsg({name,message,time,isMe}) {
   const msgs=document.getElementById('chat-msgs'); const color=isMe?'#6366f1':'#f59e0b';
   const d=document.createElement('div'); d.className='chat-msg';
-  d.innerHTML='<div class="chat-av" style="background:'+color+'22;color:'+color+'">'+initials(name)+'</div><div class="chat-body"><div class="chat-meta"><span class="chat-name">'+name+'</span><span class="chat-time">'+time+'</span></div><p class="chat-text">'+escapeHtml(message)+'</p></div>';
+  d.innerHTML='<div class="chat-av" style="background:'+color+'22;color:'+color+'">'+initials(name)+'</div><div class="chat-body"><div class="chat-meta"><span class="chat-name">'+escapeHtml(name)+'</span><span class="chat-time">'+time+'</span></div><p class="chat-text">'+escapeHtml(message)+'</p></div>';
   msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight;
 }
 
+// ── PANEL ─────────────────────────────────────
 function openPanel(p) {
   document.getElementById('sidebar').classList.add('open'); switchTab(p);
   document.getElementById('btn-chat').className='ctrl-btn '+(p==='chat'?'active':'');
@@ -691,16 +695,16 @@ function switchTab(t) {
   if(t==='whiteboard') setTimeout(resizeCanvas,50);
 }
 
+// ── WHITEBOARD ────────────────────────────────
 function buildWbToolbar() {
   const tb=document.getElementById('wb-toolbar'); tb.innerHTML='';
   [['pen','✏'],['line','╱'],['rect','▭'],['eraser','⌫']].forEach(([id,lbl])=>{
     const b=document.createElement('button'); b.className='wb-btn'+(id==='pen'?' active':''); b.id='wt-'+id; b.textContent=lbl; b.title=id; b.onclick=()=>setWbTool(id); tb.appendChild(b);
   });
-  COLORS.forEach(c=>{const s=document.createElement('button');s.className='wb-swatch';s.style.cssText='background:'+c+';border:'+(c===wbColor?'2px solid #fff':'1px solid #333');s.title=c;s.onclick=()=>setWbColor(c);tb.appendChild(s);});
-  [2,4,8].forEach(sz=>{const b=document.createElement('button');b.className='wb-btn'+(sz===wbSize?' active':'');b.id='wsz-'+sz;b.onclick=()=>setWbSize(sz);const d=document.createElement('div');d.style.cssText='width:'+(sz*2)+'px;height:'+(sz*2)+'px;border-radius:50%;background:#aaa;margin:auto';b.appendChild(d);tb.appendChild(b);});
-  const c=document.createElement('button');c.className='wb-clear';c.textContent='Clear all';c.onclick=()=>{clearCanvasLocal();if(socket)socket.emit('clear-board');};tb.appendChild(c);
+  COLORS.forEach(c=>{ const s=document.createElement('button'); s.className='wb-swatch'; s.style.cssText='background:'+c+';border:'+(c===wbColor?'2px solid #fff':'1px solid #333'); s.title=c; s.onclick=()=>setWbColor(c); tb.appendChild(s); });
+  [2,4,8].forEach(sz=>{ const b=document.createElement('button'); b.className='wb-btn'+(sz===wbSize?' active':''); b.id='wsz-'+sz; b.onclick=()=>setWbSize(sz); const d=document.createElement('div'); d.style.cssText='width:'+(sz*2)+'px;height:'+(sz*2)+'px;border-radius:50%;background:#aaa;margin:auto'; b.appendChild(d); tb.appendChild(b); });
+  const c=document.createElement('button'); c.className='wb-clear'; c.textContent='Clear all'; c.onclick=()=>{clearCanvasLocal();if(socket)socket.emit('clear-board');}; tb.appendChild(c);
 }
-
 function setWbTool(t){wbTool=t;document.querySelectorAll('#wb-toolbar .wb-btn').forEach(b=>{if(b.id&&b.id.startsWith('wt-'))b.className='wb-btn'+(b.id==='wt-'+t?' active':'');});}
 function setWbColor(c){wbColor=c;if(wbTool==='eraser')setWbTool('pen');document.querySelectorAll('.wb-swatch').forEach(s=>{s.style.border=s.title===c?'2px solid #fff':'1px solid #333';});}
 function setWbSize(s){wbSize=s;document.querySelectorAll('#wb-toolbar .wb-btn').forEach(b=>{if(b.id&&b.id.startsWith('wsz-'))b.className='wb-btn'+(b.id==='wsz-'+s?' active':'');});}
@@ -708,7 +712,7 @@ function setWbSize(s){wbSize=s;document.querySelectorAll('#wb-toolbar .wb-btn').
 function setupCanvas() {
   const canvas=document.getElementById('wb-canvas'); resizeCanvas();
   function getPos(e){const r=canvas.getBoundingClientRect();const sx=canvas.width/r.width,sy=canvas.height/r.height;const src=e.touches?e.touches[0]:e;return{x:(src.clientX-r.left)*sx,y:(src.clientY-r.top)*sy};}
-  canvas.addEventListener('mousedown',e=>{isDrawing=true;const p=getPos(e);lastX=startX=p.x;lastY=startY=p.y;if(wbTool==='line'||wbTool==='rect'){snapshot=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);}else{const ctx=canvas.getContext('2d');ctx.beginPath();ctx.moveTo(p.x,p.y);}});
+  canvas.addEventListener('mousedown',e=>{isDrawing=true;const p=getPos(e);lastX=startX=p.x;lastY=startY=p.y;if(wbTool==='line'||wbTool==='rect'){snapshot=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);}else{canvas.getContext('2d').beginPath();}});
   canvas.addEventListener('mousemove',e=>{if(!isDrawing)return;const p=getPos(e);const ctx=canvas.getContext('2d');drawSeg(ctx,lastX,lastY,p.x,p.y,wbTool,wbColor,wbSize);if(socket&&(wbTool==='pen'||wbTool==='eraser'))emitDraw(lastX,lastY,p.x,p.y,wbTool,wbColor,wbSize);lastX=p.x;lastY=p.y;});
   canvas.addEventListener('mouseup',e=>{if(!isDrawing)return;const p=getPos(e);const ctx=canvas.getContext('2d');if(wbTool==='line'){if(snapshot)ctx.putImageData(snapshot,0,0);drawSeg(ctx,startX,startY,p.x,p.y,'line',wbColor,wbSize);if(socket)emitDraw(startX,startY,p.x,p.y,'line',wbColor,wbSize);}else if(wbTool==='rect'){if(snapshot)ctx.putImageData(snapshot,0,0);ctx.strokeStyle=wbColor;ctx.lineWidth=wbSize;ctx.strokeRect(startX,startY,p.x-startX,p.y-startY);if(socket)emitDraw(startX,startY,p.x,p.y,'rect',wbColor,wbSize);}isDrawing=false;snapshot=null;ctx.beginPath();});
   const stop=()=>{isDrawing=false;snapshot=null;};
@@ -717,14 +721,15 @@ function setupCanvas() {
   canvas.addEventListener('touchmove',e=>{e.preventDefault();canvas.dispatchEvent(new MouseEvent('mousemove',{clientX:e.touches[0].clientX,clientY:e.touches[0].clientY}));},{passive:false});
   canvas.addEventListener('touchend',e=>{e.preventDefault();stop();},{passive:false});
 }
-
-function resizeCanvas(){const canvas=document.getElementById('wb-canvas');const wrap=canvas.parentElement;if(!wrap)return;const saved=canvas.getContext('2d').getImageData(0,0,canvas.width,canvas.height);canvas.width=wrap.clientWidth||280;canvas.height=wrap.clientHeight||380;const ctx=canvas.getContext('2d');ctx.fillStyle='#07070f';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.putImageData(saved,0,0);}
+function resizeCanvas(){const c=document.getElementById('wb-canvas');const w=c.parentElement;if(!w)return;const s=c.getContext('2d').getImageData(0,0,c.width,c.height);c.width=w.clientWidth||280;c.height=w.clientHeight||380;const ctx=c.getContext('2d');ctx.fillStyle='#07070f';ctx.fillRect(0,0,c.width,c.height);ctx.putImageData(s,0,0);}
 function drawSeg(ctx,x0,y0,x1,y1,tool,color,size){ctx.globalCompositeOperation=tool==='eraser'?'destination-out':'source-over';ctx.strokeStyle=tool==='eraser'?'rgba(0,0,0,1)':color;ctx.lineWidth=tool==='eraser'?18:size;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();ctx.globalCompositeOperation='source-over';}
 function emitDraw(x0,y0,x1,y1,tool,color,size){const c=document.getElementById('wb-canvas');const w=c.width,h=c.height;socket.emit('draw-event',{tool,color,size,x0:x0/w,y0:y0/h,x1:x1/w,y1:y1/h});}
-function drawRemote({tool,color,size,x0,y0,x1,y1}){const c=document.getElementById('wb-canvas');const ctx=c.getContext('2d');drawSeg(ctx,x0*c.width,y0*c.height,x1*c.width,y1*c.height,tool,color,size);}
+function drawRemote({tool,color,size,x0,y0,x1,y1}){const c=document.getElementById('wb-canvas');drawSeg(c.getContext('2d'),x0*c.width,y0*c.height,x1*c.width,y1*c.height,tool,color,size);}
 function clearCanvasLocal(){const c=document.getElementById('wb-canvas');const ctx=c.getContext('2d');ctx.clearRect(0,0,c.width,c.height);ctx.fillStyle='#07070f';ctx.fillRect(0,0,c.width,c.height);}
+
+// ── HELPERS ───────────────────────────────────
 function initials(n){return(n||'?').trim().split(' ').map(w=>w[0]).join('').substr(0,2).toUpperCase();}
-function escapeHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{});});}
 </script>
 </body>
