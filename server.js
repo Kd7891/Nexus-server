@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────
-//  Nexus Server — Phase 1
-//  Handles: room management, WebRTC signaling,
-//           live chat relay, whiteboard sync
+//  Nexus Server — Phase 1 + Auth
+//  Handles: auth, room management,
+//           WebRTC signaling, chat, whiteboard
 // ─────────────────────────────────────────────
 
 const express   = require('express');
@@ -9,40 +9,132 @@ const { createServer } = require('http');
 const { Server } = require('socket.io');
 const cors      = require('cors');
 const path      = require('path');
+const mongoose  = require('mongoose');
+const bcrypt    = require('bcryptjs');
+const jwt       = require('jsonwebtoken');
+const rateLimit = require('express-rate-limit');
 
 const app        = express();
 const httpServer = createServer(app);
 
-// ── CORS ──────────────────────────────────────
-// Allow your frontend to connect.
-// In production, replace '*' with your actual
-// frontend URL e.g. 'https://nexus.vercel.app'
 const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.FRONTEND_URL || '*',
-    methods: ['GET', 'POST']
-  }
+  cors: { origin: process.env.FRONTEND_URL || '*', methods: ['GET','POST'] }
 });
 
 app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── MongoDB ───────────────────────────────────
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('  MongoDB connected'))
+  .catch(e  => console.error('  MongoDB error:', e.message));
+
+// ── User model ────────────────────────────────
+const userSchema = new mongoose.Schema({
+  email:       { type: String, required: true, unique: true, lowercase: true, trim: true },
+  password:    { type: String, required: true },
+  displayName: { type: String, required: true, trim: true },
+  createdAt:   { type: Date, default: Date.now }
+});
+const User = mongoose.model('User', userSchema);
+
+// ── JWT helpers ───────────────────────────────
+const JWT_SECRET = process.env.JWT_SECRET || 'nexus-change-this-in-production';
+
+function signToken(user) {
+  return jwt.sign(
+    { userId: user._id, email: user.email, displayName: user.displayName },
+    JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+}
+
+function requireAuth(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth || !auth.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Not authenticated' });
+  }
+  try {
+    req.user = jwt.verify(auth.slice(7), JWT_SECRET);
+    next();
+  } catch(e) {
+    res.status(401).json({ error: 'Session expired. Please log in again.' });
+  }
+}
+
+// ── Rate limiting ─────────────────────────────
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many attempts. Please wait 15 minutes and try again.' }
+});
+
 // ── Health check ──────────────────────────────
-// Render pings this to confirm the server is up
-app.get('/', (req, res) => {
-  res.json({
-    app:     'Nexus',
-    status:  'running',
-    rooms:   rooms.size,
-    uptime:  Math.floor(process.uptime()) + 's'
-  });
+app.get('/api/health', (req, res) => {
+  res.json({ app: 'Nexus', status: 'running', rooms: rooms.size, uptime: Math.floor(process.uptime()) + 's' });
+});
+
+// ── REGISTER ──────────────────────────────────
+app.post('/api/register', authLimiter, async (req, res) => {
+  try {
+    const { email, password, displayName } = req.body;
+    if (!email || !password || !displayName)
+      return res.status(400).json({ error: 'All fields are required.' });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      return res.status(400).json({ error: 'Please enter a valid email address.' });
+    if (password.length < 8)
+      return res.status(400).json({ error: 'Password must be at least 8 characters.' });
+    if (displayName.trim().length < 2)
+      return res.status(400).json({ error: 'Name must be at least 2 characters.' });
+
+    const existing = await User.findOne({ email: email.toLowerCase() });
+    if (existing)
+      return res.status(409).json({ error: 'An account with this email already exists.' });
+
+    const hash = await bcrypt.hash(password, 12);
+    const user = await User.create({ email: email.toLowerCase(), password: hash, displayName: displayName.trim() });
+    const token = signToken(user);
+    console.log(`[Auth] Registered: ${user.email}`);
+    res.status(201).json({ token, user: { email: user.email, displayName: user.displayName } });
+  } catch(e) {
+    console.error('[Register]', e.message);
+    res.status(500).json({ error: 'Server error. Please try again.' });
+  }
+});
+
+// ── LOGIN ─────────────────────────────────────
+app.post('/api/login', authLimiter, async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password)
+      return res.status(400).json({ error: 'Email and password are required.' });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user)
+      return res.status(401).json({ error: 'Invalid email or password.' });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid)
+      return res.status(401).json({ error: 'Invalid email or password.' });
+
+    const token = signToken(user);
+    console.log(`[Auth] Login: ${user.email}`);
+    res.json({ token, user: { email: user.email, displayName: user.displayName } });
+  } catch(e) {
+    console.error('[Login]', e.message);
+    res.status(500).json({ error: 'Server error. Please try again.' });
+  }
+});
+
+// ── VERIFY TOKEN ──────────────────────────────
+app.get('/api/me', requireAuth, (req, res) => {
+  res.json({ user: req.user });
 });
 
 // ── Room store ────────────────────────────────
-// rooms: Map<roomCode, Room>
-// Room:  { participants: Map<socketId, Participant> }
-// Participant: { name, socketId, joinedAt }
 const rooms = new Map();
 
 function getParticipants(roomCode) {
@@ -55,155 +147,75 @@ function cleanupRoom(roomCode) {
   const room = rooms.get(roomCode);
   if (room && room.participants.size === 0) {
     rooms.delete(roomCode);
-    console.log(`[${roomCode}] Room removed (empty)`);
+    console.log(`[${roomCode}] Room removed`);
   }
 }
 
 // ── Socket.io ─────────────────────────────────
 io.on('connection', (socket) => {
-  console.log(`[+] Socket connected: ${socket.id}`);
+  let currentRoom = null, currentName = null;
 
-  // Track which room + name this socket belongs to
-  let currentRoom = null;
-  let currentName = null;
-
-  // ── JOIN ROOM ──────────────────────────────
-  // Client sends: { roomCode, name }
-  // Server responds with current participant list
-  // and notifies everyone else
   socket.on('join-room', ({ roomCode, name }) => {
     if (!roomCode || !name) return;
     roomCode = roomCode.toUpperCase().trim();
     name     = name.trim();
-
-    // Create room if it doesn't exist yet
-    if (!rooms.has(roomCode)) {
-      rooms.set(roomCode, { participants: new Map() });
-      console.log(`[${roomCode}] Room created`);
-    }
-
+    if (!rooms.has(roomCode)) rooms.set(roomCode, { participants: new Map() });
     const room = rooms.get(roomCode);
-    room.participants.set(socket.id, {
-      name,
-      socketId:  socket.id,
-      joinedAt:  Date.now()
-    });
-
+    room.participants.set(socket.id, { name, socketId: socket.id, joinedAt: Date.now() });
     socket.join(roomCode);
     currentRoom = roomCode;
     currentName = name;
-
-    // Send the newcomer: list of people already in the room
-    // (they'll need to initiate WebRTC offers to each of them)
     const others = getParticipants(roomCode).filter(p => p.socketId !== socket.id);
     socket.emit('room-joined', { roomCode, participants: others });
-
-    // Tell everyone else: new person arrived (so they can expect an offer)
     socket.to(roomCode).emit('participant-joined', { socketId: socket.id, name });
-
-    // Broadcast the fresh participant list to everyone in the room
     io.to(roomCode).emit('participants-updated', getParticipants(roomCode));
-
-    console.log(`[${roomCode}] ${name} joined — ${room.participants.size} in room`);
+    console.log(`[${roomCode}] ${name} joined (${room.participants.size})`);
   });
 
-  // ── LEAVE ROOM (explicit) ──────────────────
   socket.on('leave-room', () => handleLeave());
 
-  // ── WebRTC SIGNALING ───────────────────────
-  // These events are just relayed between specific peers.
-  // The server never reads the offer/answer/candidate content.
-
-  // Step 1: Caller sends offer to a specific peer
   socket.on('offer', ({ targetSocketId, offer }) => {
     if (!targetSocketId || !offer) return;
-    socket.to(targetSocketId).emit('offer', {
-      fromSocketId: socket.id,
-      fromName:     currentName,
-      offer
-    });
+    socket.to(targetSocketId).emit('offer', { fromSocketId: socket.id, fromName: currentName, offer });
   });
 
-  // Step 2: Receiver sends answer back to caller
   socket.on('answer', ({ targetSocketId, answer }) => {
     if (!targetSocketId || !answer) return;
-    socket.to(targetSocketId).emit('answer', {
-      fromSocketId: socket.id,
-      answer
-    });
+    socket.to(targetSocketId).emit('answer', { fromSocketId: socket.id, answer });
   });
 
-  // Step 3: Both sides exchange ICE candidates (network paths)
   socket.on('ice-candidate', ({ targetSocketId, candidate }) => {
     if (!targetSocketId || !candidate) return;
-    socket.to(targetSocketId).emit('ice-candidate', {
-      fromSocketId: socket.id,
-      candidate
-    });
+    socket.to(targetSocketId).emit('ice-candidate', { fromSocketId: socket.id, candidate });
   });
 
-  // ── CHAT ──────────────────────────────────
-  // Relay a chat message to everyone in the room (including sender)
   socket.on('chat-message', ({ message }) => {
-    if (!currentRoom || !message || !message.trim()) return;
-    const time = new Date().toLocaleTimeString([], {
-      hour:   '2-digit',
-      minute: '2-digit'
-    });
-    io.to(currentRoom).emit('chat-message', {
-      fromSocketId: socket.id,
-      name:         currentName,
-      message:      message.trim(),
-      time
-    });
+    if (!currentRoom || !message?.trim()) return;
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    io.to(currentRoom).emit('chat-message', { fromSocketId: socket.id, name: currentName, message: message.trim(), time });
   });
 
-  // ── WHITEBOARD SYNC ────────────────────────
-  // draw-event is sent to everyone EXCEPT the sender
-  // (the sender already drew it locally for zero latency)
-  socket.on('draw-event', (eventData) => {
+  socket.on('draw-event', (data) => {
     if (!currentRoom) return;
-    socket.to(currentRoom).emit('draw-event', {
-      fromSocketId: socket.id,
-      ...eventData  // tool, color, size, x0, y0, x1, y1
-    });
+    socket.to(currentRoom).emit('draw-event', { fromSocketId: socket.id, ...data });
   });
 
-  // Relay "clear whiteboard" to everyone else in the room
   socket.on('clear-board', () => {
     if (!currentRoom) return;
     socket.to(currentRoom).emit('clear-board');
   });
 
-  // ── DISCONNECT ─────────────────────────────
-  socket.on('disconnect', (reason) => {
-    console.log(`[-] Socket disconnected: ${socket.id} (${reason})`);
-    handleLeave();
-  });
+  socket.on('disconnect', () => handleLeave());
 
-  // ── LEAVE HANDLER ─────────────────────────
   function handleLeave() {
     if (!currentRoom) return;
     const room = rooms.get(currentRoom);
-
     if (room) {
       room.participants.delete(socket.id);
-
-      // Tell everyone this person left (so they can clean up their WebRTC connection)
-      socket.to(currentRoom).emit('participant-left', {
-        socketId: socket.id,
-        name:     currentName
-      });
-
-      // Broadcast the updated participant list
+      socket.to(currentRoom).emit('participant-left', { socketId: socket.id, name: currentName });
       io.to(currentRoom).emit('participants-updated', getParticipants(currentRoom));
-
-      const remaining = room.participants.size;
-      console.log(`[${currentRoom}] ${currentName} left — ${remaining} remaining`);
-
       cleanupRoom(currentRoom);
     }
-
     socket.leave(currentRoom);
     currentRoom = null;
     currentName = null;
@@ -211,9 +223,7 @@ io.on('connection', (socket) => {
 });
 
 // ── START ─────────────────────────────────────
-// Render injects $PORT automatically; local default is 3001
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
-  console.log(`\n  Nexus server listening on port ${PORT}`);
-  console.log(`  Health check: http://localhost:${PORT}/\n`);
+  console.log(`\n  Nexus listening on port ${PORT}\n`);
 });
